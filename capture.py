@@ -1,5 +1,5 @@
 import socket
-from telemetry import unpack
+from TelemetryFrame import TelemetryFrame as tf
 
 UDP_IP = "0.0.0.0"     # Listen on all interfaces
 UDP_PORT = 5300        # Match this in FH5 "Data Out" settings
@@ -13,7 +13,8 @@ try:
     while True:
         data, addr = sock.recvfrom(1024)
         print(f"Received {len(data)} bytes from {addr}")
-        print(unpack(data))
+        frame = tf.from_packet(data)
+        print(frame)
 except KeyboardInterrupt:
     print("\nStopped.")
 finally:
