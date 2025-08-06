@@ -3,7 +3,8 @@ from collections import deque
 import time
 
 class TimeSeriesBuffer:
-    def __init__(self, maxlen=10000):
+
+    def __init__(self, maxlen=None):
         self.buffer = deque(maxlen=maxlen)
         self.lock = threading.Lock()
 

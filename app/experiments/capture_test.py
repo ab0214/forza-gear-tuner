@@ -1,5 +1,5 @@
-from udp_listener import UdpListener
-from time_series_buffer import TimeSeriesBuffer
+from core.udp_listener import UdpListener
+from core.time_series_buffer import TimeSeriesBuffer
 
 listener = UdpListener()
 buffer = TimeSeriesBuffer()
