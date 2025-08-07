@@ -1,17 +1,43 @@
-import threading
+import asyncio
+import io
 from collections import deque
-import time
+
+from core.telemetry_frame import TelemetryFrame
+
 
 class TimeSeriesBuffer:
-
     def __init__(self, maxlen=None):
         self.buffer = deque(maxlen=maxlen)
-        self.lock = threading.Lock()
+        self.lock = asyncio.Lock()
 
-    def add(self, frame):
-        with self.lock:
-            self.buffer.append((time.time(), frame))
+    async def __aiter__(self):
+        async with self.lock:
+            for item in list(self.buffer):
+                yield item
 
-    def get_all(self):
-        with self.lock:
+    async def add(self, frame):
+        async with self.lock:
+            self.buffer.append(frame)
+    
+    async def clear(self):
+        async with self.lock:
+            self.buffer.clear()
+
+    async def to_list(self):
+        async with self.lock:
             return list(self.buffer)
+    
+    async def to_csv(self):
+        async with self.lock:
+            output = io.StringIO()
+            # Write headers
+            field_names = [
+                f.name
+                for f in TelemetryFrame.__dataclass_fields__.values()
+            ]
+            output.write(','.join(field_names) + '\n')
+            # Write values
+            for frame in self.buffer:
+                values = [str(getattr(frame, name)) for name in field_names]
+                output.write(','.join(values) + '\n')
+            return output.getvalue()

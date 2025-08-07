@@ -1,6 +1,7 @@
 import struct
 from dataclasses import dataclass
 
+
 @dataclass
 class TelemetryFrame:
     
