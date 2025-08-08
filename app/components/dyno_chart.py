@@ -2,7 +2,7 @@ from nicegui import ui
 
 
 class DynoChart:
-    def __init__(self):
+    def __init__(self, buffer=None):
         # Example data for the line graph
         x_data = [1, 2, 3, 4, 5]
         y_data = [2, 4, 1, 8, 7]

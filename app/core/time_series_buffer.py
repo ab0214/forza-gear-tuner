@@ -9,6 +9,21 @@ class TimeSeriesBuffer:
     def __init__(self, maxlen=None):
         self.buffer = deque(maxlen=maxlen)
         self.lock = asyncio.Lock()
+        self._subscribers = []
+
+    def subscribe(self, callback):
+        """Register a callback (sync or async) to be called when buffer changes."""
+        self._subscribers.append(callback)
+
+    def unsubscribe(self, callback):
+        self._subscribers.remove(callback)
+
+    def _notify(self):
+        for cb in self._subscribers:
+            if asyncio.iscoroutinefunction(cb):
+                asyncio.create_task(cb())
+            else:
+                cb()
 
     async def __aiter__(self):
         async with self.lock:
@@ -18,10 +33,12 @@ class TimeSeriesBuffer:
     async def add(self, frame):
         async with self.lock:
             self.buffer.append(frame)
+        self._notify()
 
     async def clear(self):
         async with self.lock:
             self.buffer.clear()
+        self._notify()
 
     async def to_list(self):
         async with self.lock:
@@ -49,8 +66,7 @@ class TimeSeriesBuffer:
                 try:
                     values = line.split(',')
                     frame = TelemetryFrame(*values)
-                    # print(f"Adding frame: {frame}")
-                    # await buffer.add(frame)
                     self.buffer.append(frame)
                 except Exception as e:
                     print(f"Error parsing line: {e}")
+        self._notify()
