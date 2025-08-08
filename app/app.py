@@ -4,7 +4,7 @@ from components.gears import Gears
 from nicegui import ui
 
 with ui.row():
-    for component in (Capture, DynoChart):
+    for component in (Capture, Gears, DynoChart):
         with ui.card():
             component()
 
