@@ -1,6 +1,6 @@
 from core.time_series_buffer import TimeSeriesBuffer
 from core.udp_listener import UdpListener
-from nicegui import ui
+from nicegui import events, ui
 
 
 class Capture:
@@ -9,13 +9,11 @@ class Capture:
         self.listener = UdpListener()
         self.buffer = buffer or TimeSeriesBuffer()
         self.listener.subscribe(self.buffer.add)
-
         # Title
         ui.label('Capture / Save / Load')
         # Frame count label
-        self.frame_count_label = ui.label(f'Frames: 0')
+        self.frame_count_label = ui.label('Frames: 0')
         self.listener.subscribe(self.update_frame_count)
-
         # Buttons
         with ui.button_group():
             toggle_button = ui.button(
@@ -24,12 +22,26 @@ class Capture:
             )
             ui.button('Reset', on_click=self.buffer.clear)
             ui.button('Save', on_click=self.download)
-        
-    async def update_frame_count(self, _):
+        # CSV upload
+        ui.upload(label='Import CSV file', on_upload=self.load_csv).props(
+            'accept=".csv"')
+
+    async def load_csv(self, e: events.UploadEventArguments):
+        try:
+            await self.buffer.clear()
+            await self.buffer.add_from_csv(e.content.read().decode())
+        except Exception as e:
+            error_msg = f"Error loading CSV: {e}"
+            print(error_msg)
+            ui.notify(error_msg, color='red')
+        finally:
+            await self.update_frame_count()
+
+    async def update_frame_count(self, _=None):
         count = len(self.buffer.buffer)
         self.frame_count_label.text = f'Frames: {count}'
 
-    async def toggle_capture(self, button):  
+    async def toggle_capture(self, button):
         if self.listener.running:
             await self.listener.stop()
             button.text = "Start"
@@ -38,11 +50,11 @@ class Capture:
             await self.listener.start()
             button.text = "Stop"
             button.props('color="red"')
-    
+
     async def reset_buffer(self):
         await self.buffer.clear()
-        self.update_frame_count()
+        await self.update_frame_count()
 
     async def download(self):
         csv = await self.buffer.to_csv()
-        ui.download.content(csv, filename='capture.csv')
+        ui.download.content(csv, filename='telemetry.csv')
