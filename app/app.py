@@ -1,11 +1,11 @@
-from components import dyno_chart
 from components.capture import Capture
+from components.dyno_chart import DynoChart
+from components.gears import Gears
 from nicegui import ui
 
 with ui.row():
-    with ui.card():
-        Capture()
-    with ui.card():
-        dyno_chart.create()
+    for component in (Capture, DynoChart):
+        with ui.card():
+            component()
 
 ui.run()
