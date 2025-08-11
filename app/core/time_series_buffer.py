@@ -48,15 +48,12 @@ class TimeSeriesBuffer:
         async with self.lock:
             output = io.StringIO()
             # Write headers
-            field_names = [
-                f.name
-                for f in TelemetryFrame.__dataclass_fields__.values()
-            ]
-            output.write(','.join(field_names) + '\n')
+            field_names = [f.name for f in TelemetryFrame.__dataclass_fields__.values()]
+            output.write(",".join(field_names) + "\n")
             # Write values
             for frame in self.buffer:
                 values = [str(getattr(frame, name)) for name in field_names]
-                output.write(','.join(values) + '\n')
+                output.write(",".join(values) + "\n")
             return output.getvalue()
 
     async def add_from_csv(self, csv_string):
@@ -64,9 +61,8 @@ class TimeSeriesBuffer:
         async with self.lock:
             for line in lines[1:]:  # skip headers
                 try:
-                    values = line.split(',')
-                    frame = TelemetryFrame(*values)
+                    frame = TelemetryFrame.from_csv(line)
                     self.buffer.append(frame)
                 except Exception as e:
-                    print(f"Error parsing line: {e}")
+                    print(f"Error parsing CSV line: {e}")
         self._notify()

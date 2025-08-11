@@ -1,16 +1,24 @@
 import struct
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 
 
 @dataclass
 class TelemetryFrame:
-    
     @classmethod
     def from_packet(cls, packet: bytes) -> "TelemetryFrame":
-        data_format = '<iIfffffffffffffffffffffffffffffffffffffffffffffffffffiiiiiiIIfffffffffffffffffHBBBBBBbbb'
+        data_format = "<iIfffffffffffffffffffffffffffffffffffffffffffffffffff\
+            iiiiiiIIfffffffffffffffffHBBBBBBbbb"
         values = struct.unpack(data_format, packet[:323])
         return cls(*values)
 
+    @classmethod
+    def from_csv(cls, csv_string: str) -> "TelemetryFrame":
+        str_values = csv_string.split(",")
+        values = []
+        for field, str_val in zip(fields(cls), str_values):
+            type_ = field.type  # Get data type
+            values.append(type_(float(str_val)))  # Convert to appropriate type
+        return cls(*values)
 
     # Basic info
     IsRaceOn: int
@@ -93,11 +101,11 @@ class TelemetryFrame:
 
     # Car info
     CarOrdinal: int  # unique make/model id
-    CarClass: int    # enum
-    CarPI: int       # performance index
+    CarClass: int  # enum
+    CarPI: int  # performance index
     Drivetrain: int  # enum
-    Cylinders: int   # 0-255
-    CarType: int     # enum
+    Cylinders: int  # 0-255
+    CarType: int  # enum
 
     # Unknown/placeholder
     Placeholder2: int  # unknown
@@ -107,11 +115,11 @@ class TelemetryFrame:
     PosX: float
     PosY: float
     PosZ: float
-    
+
     # Dyno
-    Speed: float     # m/s
-    Power: float     # W
-    Torque: float    # Nm
+    Speed: float  # m/s
+    Power: float  # W
+    Torque: float  # Nm
 
     # Tire temperatures
     TireTempFL: float
@@ -120,7 +128,7 @@ class TelemetryFrame:
     TireTempRR: float
 
     # Misc
-    Boost: float     # PSI?
+    Boost: float  # PSI?
     Fuel: float
     DistTraveled: float
 
@@ -137,9 +145,9 @@ class TelemetryFrame:
     Brake: int
     Clutch: int
     Handbrake: int
-    Gear: int       # 0-255
-    Steer: int      # -127 to 127
+    Gear: int  # 0-255
+    Steer: int  # -127 to 127
 
     # Unknown
-    DrivingLine: int # normalized
-    AIBrakeDiff: int # normalized
+    DrivingLine: int  # normalized
+    AIBrakeDiff: int  # normalized
