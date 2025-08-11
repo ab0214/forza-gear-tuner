@@ -20,6 +20,18 @@ class TelemetryFrame:
             values.append(type_(float(str_val)))  # Convert to appropriate type
         return cls(*values)
 
+    @classmethod
+    def csv_header(cls) -> str:
+        """Return a CSV header string with all field names, in order."""
+        field_names = [f.name for f in fields(cls)]
+        return ",".join(field_names)
+
+    def to_csv(self) -> str:
+        """Return a CSV string of the field values, in order."""
+        field_names = [f.name for f in fields(self)]
+        values = [str(getattr(self, name)) for name in field_names]
+        return ",".join(values)
+
     # Basic info
     IsRaceOn: int
     TimestampMS: int  # can overflow to 0

@@ -47,19 +47,15 @@ class TimeSeriesBuffer:
     async def to_csv(self):
         async with self.lock:
             output = io.StringIO()
-            # Write headers
-            field_names = [f.name for f in TelemetryFrame.__dataclass_fields__.values()]
-            output.write(",".join(field_names) + "\n")
-            # Write values
+            output.write(TelemetryFrame.csv_header() + "\n")  # Write headers
             for frame in self.buffer:
-                values = [str(getattr(frame, name)) for name in field_names]
-                output.write(",".join(values) + "\n")
+                output.write(frame.to_csv() + "\n")  # Write values (rows)
             return output.getvalue()
 
     async def add_from_csv(self, csv_string):
         lines = csv_string.splitlines()
         async with self.lock:
-            for line in lines[1:]:  # skip headers
+            for line in lines[1:]:  # Skip headers
                 try:
                     frame = TelemetryFrame.from_csv(line)
                     self.buffer.append(frame)
