@@ -6,16 +6,16 @@ from core.telemetry_frame import TelemetryFrame
 
 
 class TimeSeriesBuffer:
-    def __init__(self, maxlen=None):
+    def __init__(self, maxlen: int = None):
         self.buffer = deque(maxlen=maxlen)
         self.lock = asyncio.Lock()
         self._subscribers = []
 
-    def subscribe(self, callback):
+    def subscribe(self, callback: callable):
         """Register a callback (sync or async) to be called when buffer changes."""
         self._subscribers.append(callback)
 
-    def unsubscribe(self, callback):
+    def unsubscribe(self, callback: callable):
         self._subscribers.remove(callback)
 
     def _notify(self):
@@ -30,7 +30,7 @@ class TimeSeriesBuffer:
             for item in list(self.buffer):
                 yield item
 
-    async def add(self, frame):
+    async def add(self, frame: TelemetryFrame):
         async with self.lock:
             self.buffer.append(frame)
         self._notify()
@@ -40,11 +40,11 @@ class TimeSeriesBuffer:
             self.buffer.clear()
         self._notify()
 
-    async def to_list(self):
+    async def to_list(self) -> list[TelemetryFrame]:
         async with self.lock:
             return list(self.buffer)
 
-    async def to_csv(self):
+    async def to_csv(self) -> str:
         async with self.lock:
             output = io.StringIO()
             output.write(TelemetryFrame.csv_header() + "\n")  # Write headers
@@ -52,7 +52,7 @@ class TimeSeriesBuffer:
                 output.write(frame.to_csv() + "\n")  # Write values (rows)
             return output.getvalue()
 
-    async def add_from_csv(self, csv_string):
+    async def add_from_csv(self, csv_string: str):
         lines = csv_string.splitlines()
         async with self.lock:
             for line in lines[1:]:  # Skip headers
