@@ -44,7 +44,7 @@ class Inspector:
             self.value_label.text = "N/A"
 
     def select_frame(self, e):
-        if not self.buffer or len(self.buffer.buffer) == 0:
+        if not self.buffer or len(self.buffer) == 0:
             self.selected_frame = None
             self.update_value_label()
             return
@@ -53,8 +53,8 @@ class Inspector:
         if position == 1.0:
             index = -1
         else:
-            index = int((len(self.buffer.buffer) - 0.5) * position)
-        self.selected_frame = self.buffer.buffer[index]
+            index = int((len(self.buffer) - 0.5) * position)
+        self.selected_frame = self.buffer.contents[index]
         self.update_value_label()
 
     def select_field(self, e):

@@ -36,10 +36,10 @@ class Capture:
             print(error_msg)
             ui.notify(error_msg, color="red")
         finally:
-            await self.update_frame_count()
+            self.update_frame_count()
 
     def update_frame_count(self, _=None):
-        count = len(self.buffer.buffer)
+        count = len(self.buffer)
         self.frame_count_label.text = f"Frames: {count}"
 
     async def toggle_capture(self, button):
