@@ -1,4 +1,3 @@
-from core.time_series_buffer import TimeSeriesBuffer
 from core.udp_listener import UdpListener
 from nicegui import events, ui
 
@@ -29,8 +28,7 @@ class Capture:
 
     async def load_csv(self, e: events.UploadEventArguments):
         try:
-            await self.buffer.clear()
-            await self.buffer.add_from_csv(e.content.read().decode())
+            await self.buffer.load_string(e.content.read().decode())
         except Exception as e:
             error_msg = f"Error loading CSV: {e}"
             print(error_msg)

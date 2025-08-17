@@ -12,8 +12,8 @@ class TelemetryFrame:
         return cls(*values)
 
     @classmethod
-    def from_csv(cls, csv_string: str) -> "TelemetryFrame":
-        str_values = csv_string.split(",")
+    def from_csv(cls, csv_string: str, delimiter: str = ",") -> "TelemetryFrame":
+        str_values = csv_string.split(delimiter)
         values = []
         for field, str_val in zip(fields(cls), str_values):
             type_ = field.type  # Get data type

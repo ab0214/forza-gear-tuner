@@ -12,9 +12,7 @@ from core.time_series_buffer import TimeSeriesBuffer
 # Create a shared buffer
 shared_buffer = TimeSeriesBuffer()
 # Load data for testing purposes
-with open("data/telemetry.csv") as file:
-    csv_data = file.read()
-asyncio.run(shared_buffer.add_from_csv(csv_data))
+asyncio.run(shared_buffer.load_file("data/telemetry.csv"))
 
 # Pass the shared buffer to all components
 with ui.row():

@@ -55,13 +55,49 @@ class TimeSeriesBuffer:
                 output.write(frame.to_csv() + "\n")  # Write values (rows)
             return output.getvalue()
 
-    async def add_from_csv(self, csv_string: str):
-        lines = csv_string.splitlines()
+    async def load_file(
+        self,
+        file_path: str,
+        clear: bool = True,
+        has_headers: bool = True,
+        delimiter: str = ",",
+    ):
+        """
+        Load CSV file
+        Args:
+            file_path (str): Path to the CSV file.
+            clear (bool): Whether to clear the buffer before loading new data.
+            has_headers (bool): Whether the first line contains headers.
+            delimiter (str): Delimiter used in parsing the CSV file.
+        """
+        with open(file_path, "r") as file:
+            string = file.read()
+        await self.load_string(string, clear, has_headers, delimiter)
+
+    async def load_string(
+        self,
+        string: str,
+        clear: bool = True,
+        has_headers: bool = True,
+        delimiter: str = ",",
+    ):
+        """
+        Load CSV formatted data from one or more lines of text.
+        Args:
+            string (str): String to parse.
+            clear (bool): Whether to clear the buffer before loading new data.
+            has_headers (bool): Whether the first line contains headers.
+            delimiter (str): Delimiter used in parsing the string.
+        """
+        if clear:
+            await self.clear()
+        lines = string.splitlines()
+        start_index = 1 if has_headers else 0
         async with self._lock:
-            for line in lines[1:]:  # Skip headers
+            for i, line in enumerate(lines[start_index:]):
                 try:
-                    frame = TelemetryFrame.from_csv(line)
+                    frame = TelemetryFrame.from_csv(line, delimiter=delimiter)
                     self.contents.append(frame)
                 except Exception as e:
-                    print(f"Error parsing CSV line: {e}")
+                    print(f"Error parsing line {i}: {e}")
         self._notify()
