@@ -56,7 +56,7 @@ class Gears:
 
         # Create UI elements for individual gears
         with self.grid:
-            for gear, ratio in ratios.items():
+            for gear, ratio in enumerate(ratios[1:], start=1):  # Skip 0th gr (reverse)
                 label = ui.label(str(gear))  # Gear number
 
                 slider = ui.slider(min=0.1, max=20.0, value=ratio, step=0.01)
@@ -69,3 +69,12 @@ class Gears:
                 # Store the UI elements in the grid_contents dictionary,
                 # so we can update/delete them later.
                 self.grid_contents[gear] = [label, slider, ratio_label]
+
+    def get_ratios(self):
+        return {
+            elements[0].text: elements[1].value
+            for elements in self.grid_contents.items()
+        }
+
+    def get_final_drive(self):
+        return self.final_drive

@@ -64,10 +64,10 @@ def analyze_gear_ratio(tfs: List[TelemetryFrame], gear: int) -> float:
     return sum(ratios) / len(ratios)
 
 
-def analyze_gear_ratios(tfs: List[TelemetryFrame]) -> dict:
+def analyze_gear_ratios(tfs: List[TelemetryFrame]) -> List[float]:
     """Determine gear ratios for all gears based on telemetry data."""
     max_gear = max((int(tf.Gear) for tf in tfs), default=0)  # Find top gear
-    gear_ratios = {}
-    for gear in range(1, max_gear + 1):
-        gear_ratios[gear] = analyze_gear_ratio(tfs, gear)
+    gear_ratios = []
+    for gear in range(0, max_gear + 1):
+        gear_ratios.append(analyze_gear_ratio(tfs, gear))
     return gear_ratios
