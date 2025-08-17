@@ -8,6 +8,7 @@ class Capture:
         self.listener = UdpListener()
         self.buffer = buffer  # or TimeSeriesBuffer()
         self.listener.subscribe(self.buffer.add)
+        self.listener.subscribe(self.update_frame_count)
         # Title
         ui.label("Capture / Save / Load")
         # Frame count label
@@ -18,7 +19,7 @@ class Capture:
             toggle_button = ui.button(
                 "Start", on_click=lambda: self.toggle_capture(toggle_button)
             )
-            ui.button("Reset", on_click=self.buffer.clear)
+            ui.button("Reset", on_click=self.reset_buffer)
             ui.button("Save", on_click=self.download)
         # CSV upload
         ui.upload(label="Import CSV file", on_upload=self.load_csv).props(
@@ -52,7 +53,7 @@ class Capture:
 
     async def reset_buffer(self):
         await self.buffer.clear()
-        await self.update_frame_count()
+        self.update_frame_count()
 
     async def download(self):
         csv = await self.buffer.to_csv()
