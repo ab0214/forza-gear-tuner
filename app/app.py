@@ -11,13 +11,15 @@ from core.time_series_buffer import TimeSeriesBuffer
 
 # Create a shared buffer
 shared_buffer = TimeSeriesBuffer()
-# Load data for testing purposes
-asyncio.run(shared_buffer.load_file("data/telemetry.csv"))
 
-# Pass the shared buffer to all components
-with ui.row():
-    for component_cls in (Capture, Gears, GearChart, Inspector):
-        with ui.card():
-            component_cls(buffer=shared_buffer)
 
-ui.run()
+async def main_page():
+    asyncio.create_task(shared_buffer.load_file("data/telemetry.csv"))
+    with ui.row():
+        for component_cls in (Capture, Gears, GearChart, Inspector):
+            with ui.card():
+                component_cls(buffer=shared_buffer)
+
+
+ui.page("/")(main_page)
+ui.run(fastapi_docs=True, endpoint_documentation="all")
