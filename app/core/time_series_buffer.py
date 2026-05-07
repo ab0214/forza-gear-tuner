@@ -1,5 +1,5 @@
 import asyncio
-import io
+import inspect
 from collections import deque
 
 from core.telemetry_frame import TelemetryFrame
@@ -42,7 +42,7 @@ class TimeSeriesBuffer:
     def _notify(self):
         """Notify all subscribers about a change in the buffer."""
         for cb in self._subscribers:
-            if asyncio.iscoroutinefunction(cb):
+            if inspect.iscoroutinefunction(cb):
                 asyncio.create_task(cb())
             else:
                 cb()
@@ -68,59 +68,41 @@ class TimeSeriesBuffer:
         async with self._lock:
             return list(self.contents)
 
-    async def to_csv(self) -> str:
-        """Convert the buffer contents to a CSV formatted string."""
+    async def to_jsonl(self) -> str:
+        """Convert the buffer contents to JSONL (JSON Lines) formatted string."""
         async with self._lock:
-            output = io.StringIO()
-            output.write(TelemetryFrame.csv_header() + "\n")  # Write headers
-            for frame in self.contents:
-                output.write(frame.to_csv() + "\n")  # Write values (rows)
-            return output.getvalue()
+            lines = [frame.model_dump_json() for frame in self.contents]
+            return "\n".join(lines)
 
     # Data import
 
-    async def load_file(
-        self,
-        file_path: str,
-        clear: bool = True,
-        has_headers: bool = True,
-        delimiter: str = ",",
-    ):
+    async def load_file(self, file_path: str, clear: bool = True):
         """
-        Load CSV file
+        Load JSONL file
         Args:
-            file_path (str): Path to the CSV file.
+            file_path (str): Path to the JSONL file.
             clear (bool): Whether to clear the buffer before loading new data.
-            has_headers (bool): Whether the first line contains headers.
-            delimiter (str): Delimiter used in parsing the CSV file.
         """
         with open(file_path, "r") as file:
-            string = file.read()
-        await self.load_string(string, clear, has_headers, delimiter)
+            jsonl = file.read()
+        await self.load_jsonl(jsonl, clear)
 
-    async def load_string(
-        self,
-        string: str,
-        clear: bool = True,
-        has_headers: bool = True,
-        delimiter: str = ",",
-    ):
+    async def load_jsonl(self, jsonl: str, clear: bool = True):
         """
-        Load CSV formatted data from one or more lines of text.
+        Load JSONL formatted data from one or more lines of text.
         Args:
-            string (str): String to parse.
+            jsonl (str): JSONL string to parse.
             clear (bool): Whether to clear the buffer before loading new data.
-            has_headers (bool): Whether the first line contains headers.
-            delimiter (str): Delimiter used in parsing the string.
         """
         if clear:
             await self.clear()
-        lines = string.splitlines()
-        start_index = 1 if has_headers else 0
+        lines = jsonl.strip().splitlines()
         async with self._lock:
-            for i, line in enumerate(lines[start_index:]):
+            for i, line in enumerate(lines):
+                if not line.strip():
+                    continue
                 try:
-                    frame = TelemetryFrame.from_csv(line, delimiter=delimiter)
+                    frame = TelemetryFrame.model_validate_json(line)
                     self.contents.append(frame)
                 except Exception as e:
                     print(f"Error parsing line {i}: {e}")

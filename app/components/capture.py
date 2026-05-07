@@ -1,12 +1,13 @@
+from core.time_series_buffer import TimeSeriesBuffer
 from core.udp_listener import UdpListener
 from nicegui import events, ui
 
 
 class Capture:
-    def __init__(self, buffer=None):
+    def __init__(self, buffer: TimeSeriesBuffer):
         # Set up capture and buffer
         self.listener = UdpListener()
-        self.buffer = buffer  # or TimeSeriesBuffer()
+        self.buffer = buffer
         self.listener.subscribe(self.buffer.add)
         self.listener.subscribe(self.update_frame_count)
         # Title
@@ -21,17 +22,18 @@ class Capture:
             )
             ui.button("Reset", on_click=self.reset_buffer)
             ui.button("Save", on_click=self.download)
-        # CSV upload
-        ui.upload(label="Import CSV file", on_upload=self.load_csv).props(
-            'accept=".csv"'
-        )
+        # JSONL upload
+        ui.upload(
+            label="Import JSONL file", on_upload=self.load_jsonl, max_files=1
+        ).props('accept=".jsonl"')
         self.update_frame_count()
 
-    async def load_csv(self, e: events.UploadEventArguments):
+    async def load_jsonl(self, e: events.UploadEventArguments):
         try:
-            await self.buffer.load_string(e.content.read().decode())
+            text = await e.file.text()
+            await self.buffer.load_jsonl(text)
         except Exception as e:
-            error_msg = f"Error loading CSV: {e}"
+            error_msg = f"Error loading JSONL: {e}"
             print(error_msg)
             ui.notify(error_msg, color="red")
         finally:
@@ -46,6 +48,7 @@ class Capture:
             await self.listener.stop()
             button.text = "Start"
             button.props('color="blue"')
+            self.buffer._notify()  # Ensure UI updates with any final frames
         else:
             await self.listener.start()
             button.text = "Stop"
@@ -56,5 +59,5 @@ class Capture:
         self.update_frame_count()
 
     async def download(self):
-        csv = await self.buffer.to_csv()
-        ui.download.content(csv, filename="telemetry.csv")
+        jsonl = await self.buffer.to_jsonl()
+        ui.download(src=bytes(jsonl, "utf-8"), filename="telemetry.jsonl")

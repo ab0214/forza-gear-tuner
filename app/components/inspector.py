@@ -1,4 +1,3 @@
-from dataclasses import fields
 from nicegui import ui
 from core.telemetry_frame import TelemetryFrame
 
@@ -23,7 +22,7 @@ class Inspector:
                 on_change=self.select_frame,
             )
 
-        field_names = [f.name for f in fields(TelemetryFrame)]
+        field_names = list(TelemetryFrame.model_fields.keys())
         self.field_dropdown = ui.select(
             field_names, value=field_names[0], on_change=self.select_field
         )

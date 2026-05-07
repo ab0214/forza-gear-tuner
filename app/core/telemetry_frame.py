@@ -1,165 +1,153 @@
 import struct
-from dataclasses import dataclass, fields
+from typing import Any
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
-@dataclass
-class TelemetryFrame:
+class TelemetryFrame(BaseModel):
+    model_config = ConfigDict(
+        validate_assignment=True,
+        populate_by_name=True,
+        str_strip_whitespace=True,
+    )
+
+    @model_validator(mode="before")
     @classmethod
-    def from_packet(cls, packet: bytes) -> "TelemetryFrame":
-        data_format = "<iIfffffffffffffffffffffffffffffffffffffffffffffffffff\
-            iiiiiiIIfffffffffffffffffHBBBBBBbbb"
-        values = struct.unpack(data_format, packet[:323])
-        return cls(*values)
-
-    @classmethod
-    def from_csv(cls, csv_string: str, delimiter: str = ",") -> "TelemetryFrame":
-        str_values = csv_string.split(delimiter)
-        values = []
-        for field, str_val in zip(fields(cls), str_values):
-            type_ = field.type  # Get data type
-            values.append(type_(float(str_val)))  # Convert to appropriate type
-        return cls(*values)
-
-    @classmethod
-    def csv_header(cls) -> str:
-        """Return a CSV header string with all field names, in order."""
-        field_names = [f.name for f in fields(cls)]
-        return ",".join(field_names)
-
-    def to_csv(self) -> str:
-        """Return a CSV string of the field values, in order."""
-        field_names = [f.name for f in fields(self)]
-        values = [str(getattr(self, name)) for name in field_names]
-        return ",".join(values)
+    def unpack_packet(cls, data: Any) -> tuple[Any, ...]:
+        if isinstance(data, bytes):
+            data_format = "<iIfffffffffffffffffffffffffffffffffffffffffffffffffff\
+                iiiiiiIIfffffffffffffffffHBBBBBBbbb"
+            values = struct.unpack(data_format, data[:323])
+            return dict(zip(cls.model_fields.keys(), values))
+        return data
 
     # Basic info
-    IsRaceOn: int
-    TimestampMS: int  # can overflow to 0
+    is_race_on: bool = Field(alias="IsRaceOn")
+    timestamp_ms: int = Field(alias="TimestampMS")  # can overflow to 0
 
     # Engine RPM
-    MaxRPM: float
-    IdleRPM: float
-    RPM: float
+    engine_max_rpm: float = Field(alias="EngineMaxRpm")
+    idle_rpm: float = Field(alias="EngineIdleRpm")
+    rpm: float = Field(alias="CurrentEngineRpm")
 
     # Acceleration (m/s^2?), car's right, up, forward
-    AccelX: float
-    AccelY: float
-    AccelZ: float
+    acceleration_x: float = Field(alias="AccelerationX")
+    acceleration_y: float = Field(alias="AccelerationY")
+    acceleration_z: float = Field(alias="AccelerationZ")
 
     # Linear velocity (m/s?), car's right, up, forward
-    LinVelX: float
-    LinVelY: float
-    LinVelZ: float
+    velocity_x: float = Field(alias="VelocityX")
+    velocity_y: float = Field(alias="VelocityY")
+    velocity_z: float = Field(alias="VelocityZ")
 
     # Angular velocity (rad/s?), car's right, up, forward
-    AngVelX: float
-    AngVelY: float
-    AngVelZ: float
+    angular_velocity_x: float = Field(alias="AngularVelocityX")
+    angular_velocity_y: float = Field(alias="AngularVelocityY")
+    angular_velocity_z: float = Field(alias="AngularVelocityZ")
 
     # Orientation
-    Yaw: float
-    Pitch: float
-    Roll: float
+    yaw: float = Field(alias="Yaw")
+    pitch: float = Field(alias="Pitch")
+    roll: float = Field(alias="Roll")
 
     # Suspension normalized (0 = fully extended, 1 = fully compressed)
-    SuspNormFL: float
-    SuspNormFR: float
-    SuspNormRL: float
-    SuspNormRR: float
+    susp_norm_fl: float = Field(alias="NormalizedSuspensionTravelFrontLeft")
+    susp_norm_fr: float = Field(alias="NormalizedSuspensionTravelFrontRight")
+    susp_norm_rl: float = Field(alias="NormalizedSuspensionTravelRearLeft")
+    susp_norm_rr: float = Field(alias="NormalizedSuspensionTravelRearRight")
 
     # Slip ratio (0 = max grip, 1 = min grip)
-    SlipRatioFL: float
-    SlipRatioFR: float
-    SlipRatioRL: float
-    SlipRatioRR: float
+    slip_ratio_fl: float = Field(alias="TireSlipRatioFrontLeft")
+    slip_ratio_fr: float = Field(alias="TireSlipRatioFrontRight")
+    slip_ratio_rl: float = Field(alias="TireSlipRatioRearLeft")
+    slip_ratio_rr: float = Field(alias="TireSlipRatioRearRight")
 
     # Wheel speed (rad/s)
-    WheelSpeedFL: float
-    WheelSpeedFR: float
-    WheelSpeedRL: float
-    WheelSpeedRR: float
+    wheel_speed_fl: float = Field(alias="WheelRotationSpeedFrontLeft")
+    wheel_speed_fr: float = Field(alias="WheelRotationSpeedFrontRight")
+    wheel_speed_rl: float = Field(alias="WheelRotationSpeedRearLeft")
+    wheel_speed_rr: float = Field(alias="WheelRotationSpeedRearRight")
 
     # Surface info
-    OnRumbleStripFL: int
-    OnRumbleStripFR: int
-    OnRumbleStripRL: int
-    OnRumbleStripRR: int
-    InPuddleFL: int
-    InPuddleFR: int
-    InPuddleRL: int
-    InPuddleRR: int
-    SurfaceRumbleFL: int
-    SurfaceRumbleFR: int
-    SurfaceRumbleRL: int
-    SurfaceRumbleRR: int
+    on_rumble_strip_fl: bool = Field(alias="WheelOnRumbleStripFrontLeft")
+    on_rumble_strip_fr: bool = Field(alias="WheelOnRumbleStripFrontRight")
+    on_rumble_strip_rl: bool = Field(alias="WheelOnRumbleStripRearLeft")
+    on_rumble_strip_rr: bool = Field(alias="WheelOnRumbleStripRearRight")
+    in_puddle_fl: bool = Field(alias="WheelInPuddleDepthFrontLeft")
+    in_puddle_fr: bool = Field(alias="WheelInPuddleDepthFrontRight")
+    in_puddle_rl: bool = Field(alias="WheelInPuddleDepthRearLeft")
+    in_puddle_rr: bool = Field(alias="WheelInPuddleDepthRearRight")
+    surface_rumble_fl: float = Field(alias="SurfaceRumbleFrontLeft")
+    surface_rumble_fr: float = Field(alias="SurfaceRumbleFrontRight")
+    surface_rumble_rl: float = Field(alias="SurfaceRumbleRearLeft")
+    surface_rumble_rr: float = Field(alias="SurfaceRumbleRearRight")
 
     # Slip angles (0 = max grip, 1 = min grip)
-    SlipAngleFL: float
-    SlipAngleFR: float
-    SlipAngleRL: float
-    SlipAngleRR: float
+    slip_angle_fl: float = Field(alias="TireSlipAngleFrontLeft")
+    slip_angle_fr: float = Field(alias="TireSlipAngleFrontRight")
+    slip_angle_rl: float = Field(alias="TireSlipAngleRearLeft")
+    slip_angle_rr: float = Field(alias="TireSlipAngleRearRight")
 
     # Combined slip (longitudinal + lateral?)
-    SlipCombinedFL: float
-    SlipCombinedFR: float
-    SlipCombinedRL: float
-    SlipCombinedRR: float
+    slip_combined_fl: float = Field(alias="TireCombinedSlipFrontLeft")
+    slip_combined_fr: float = Field(alias="TireCombinedSlipFrontRight")
+    slip_combined_rl: float = Field(alias="TireCombinedSlipRearLeft")
+    slip_combined_rr: float = Field(alias="TireCombinedSlipRearRight")
 
     # Suspension absolute compression?, meters
-    SuspAbsFL: float
-    SuspAbsFR: float
-    SuspAbsRL: float
-    SuspAbsRR: float
+    susp_abs_fl: float = Field(alias="SuspensionTravelMetersFrontLeft")
+    susp_abs_fr: float = Field(alias="SuspensionTravelMetersFrontRight")
+    susp_abs_rl: float = Field(alias="SuspensionTravelMetersRearLeft")
+    susp_abs_rr: float = Field(alias="SuspensionTravelMetersRearRight")
 
     # Car info
-    CarOrdinal: int  # unique make/model id
-    CarClass: int  # enum
-    CarPI: int  # performance index
-    Drivetrain: int  # enum
-    Cylinders: int  # 0-255
-    CarType: int  # enum
+    car_ordinal: int = Field(alias="CarOrdinal")  # unique make/model id
+    car_class: int = Field(alias="CarClass")  # enum
+    car_pi: int = Field(alias="CarPerformanceIndex")  # performance index
+    drivetrain: int = Field(alias="DrivetrainType")  # enum
+    cylinders: int = Field(alias="NumCylinders")  # 0-255
+    car_type: int = Field(alias="CarType", default=0)  # enum
 
     # Unknown/placeholder
-    Placeholder2: int  # unknown
-    Placeholder3: int  # unknown
+    placeholder2: int = Field(alias="Placeholder2", default=0)  # unknown
+    placeholder3: int = Field(alias="Placeholder3", default=0)  # unknown
 
     # Position
-    PosX: float
-    PosY: float
-    PosZ: float
+    pos_x: float = Field(alias="PositionX")
+    pos_y: float = Field(alias="PositionY")
+    pos_z: float = Field(alias="PositionZ")
 
     # Dyno
-    Speed: float  # m/s
-    Power: float  # W
-    Torque: float  # Nm
+    speed: float = Field(alias="Speed")  # m/s
+    power: float = Field(alias="Power")  # W
+    torque: float = Field(alias="Torque")  # Nm
 
     # Tire temperatures
-    TireTempFL: float
-    TireTempFR: float
-    TireTempRL: float
-    TireTempRR: float
+    tire_temp_fl: float = Field(alias="TireTempFl")
+    tire_temp_fr: float = Field(alias="TireTempFr")
+    tire_temp_rl: float = Field(alias="TireTempRl")
+    tire_temp_rr: float = Field(alias="TireTempRr")
 
     # Misc
-    Boost: float  # PSI?
-    Fuel: float
-    DistTraveled: float
+    boost: float = Field(alias="Boost")  # PSI?
+    fuel: float = Field(alias="Fuel")
+    dist_traveled: float = Field(alias="Distance")
 
     # Race info
-    BestLapTime: float
-    LastLapTime: float
-    CurLapTime: float
-    CurRaceTime: float
-    LapNo: int
-    RacePos: int
+    best_lap_time: float = Field(alias="BestLapTime")
+    last_lap_time: float = Field(alias="LastLapTime")
+    current_lap_time: float = Field(alias="CurrentLapTime")
+    current_race_time: float = Field(alias="CurrentRaceTime")
+    lap_no: int = Field(alias="Lap")
+    race_pos: int = Field(alias="RacePosition")
 
     # Inputs (0-255)
-    Throttle: int
-    Brake: int
-    Clutch: int
-    Handbrake: int
-    Gear: int  # 0-255
-    Steer: int  # -127 to 127
+    throttle: int = Field(alias="Accelerator")
+    brake: int = Field(alias="Brake")
+    clutch: int = Field(alias="Clutch")
+    handbrake: int = Field(alias="Handbrake")
+    gear: int = Field(alias="Gear")  # 0-255
+    steer: int = Field(alias="Steer")  # -127 to 127
 
     # Unknown
-    DrivingLine: int  # normalized
-    AIBrakeDiff: int  # normalized
+    driving_line: int = Field(alias="NormalDrivingLine")  # normalized
+    ai_brake_diff: int = Field(alias="NormalAiBrakeDifference")  # normalized

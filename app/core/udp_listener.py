@@ -1,4 +1,5 @@
 import asyncio
+import inspect
 import socket
 
 from core.telemetry_frame import TelemetryFrame
@@ -12,17 +13,21 @@ class UdpListener:
         self.subscribers = []
         self.running = False
 
-
     async def start(self):
         self.running = True
         self._listen_task = asyncio.create_task(self._listen())
 
     async def stop(self):
         self.running = False
-        if hasattr(self, "_listen_task"):
-            await self._listen_task
         if hasattr(self, "sock"):
             self.sock.close()
+        if hasattr(self, "_listen_task"):
+            if not self._listen_task.done():
+                self._listen_task.cancel()
+            try:
+                await self._listen_task
+            except asyncio.CancelledError:
+                pass
 
     def subscribe(self, callback):
         self.subscribers.append(callback)
@@ -36,14 +41,17 @@ class UdpListener:
         while self.running:
             try:
                 data, _ = await loop.sock_recvfrom(self.sock, 1024)
-                tf = TelemetryFrame.from_packet(data)
-                if self.require_race_on and tf.IsRaceOn == 0:
+                tf = TelemetryFrame.model_validate(data)
+                if self.require_race_on and tf.is_race_on == 0:
                     continue
                 for callback in self.subscribers:
-                    if asyncio.iscoroutinefunction(callback):
+                    if inspect.iscoroutinefunction(callback):
                         asyncio.create_task(callback(tf))
                     else:
                         callback(tf)
+            except OSError:
+                # Socket was closed, exit gracefully
+                break
             except Exception as e:
                 if self.running:
                     print("UDP listener error:", e)
