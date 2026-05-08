@@ -1,27 +1,18 @@
-from nicegui import ui
+from typing import cast
 
-import pandas as pd
 import numpy as np
+import pandas as pd
+import plotly.graph_objects as go
+from nicegui import ui
 from scipy import stats
 from scipy.interpolate import interp1d
-import plotly.graph_objects as go
 
 from core.time_series_buffer import TimeSeriesBuffer
 
 
 class DynoChart:
-    def __init__(self, buffer: TimeSeriesBuffer = None):
-        # Example data for the line graph
-        # x_data = [1, 2, 3, 4, 5]
-        # y_data = [2, 4, 1, 8, 7]
-
-        # ui.label("Example Line Graph")
-        # self.line_plot = ui.line_plot(n=1, limit=200, update_every=1, figsize=(6, 4))
-        # self.line_plot.with_legend(["label"], loc="upper center", ncol=1)
-        # self.line_plot.push(x=x_data, Y=[y_data])
-
+    def __init__(self, buffer: TimeSeriesBuffer):
         self.buffer = buffer
-        self.chart = None
         self.buffer.subscribe(self.update_chart)
 
         ui.label("Dyno Chart")
@@ -63,10 +54,11 @@ class DynoChart:
     def update_chart(self):
         """Update the chart with current buffer data"""
         thing = do_thing(self.buffer)
-        self.chart.figure.data[0].x = thing["rpm"]
-        self.chart.figure.data[0].y = thing["power"]
-        self.chart.figure.data[1].x = thing["rpm"]
-        self.chart.figure.data[1].y = thing["torque"]
+        fig: go.Figure = cast(go.Figure, self.chart.figure)
+        fig.data[0].x = thing["rpm"]
+        fig.data[0].y = thing["power"]
+        fig.data[1].x = thing["rpm"]
+        fig.data[1].y = thing["torque"]
         ui.update(self.chart)
 
 
@@ -88,7 +80,7 @@ def do_thing(buffer: TimeSeriesBuffer):
     # Filter NA and outliers
     powercurve.dropna(inplace=True)
     if len(powercurve) > 0:
-        z = np.abs(stats.zscore(powercurve, nan_policy="omit"))
+        z = np.abs(stats.zscore(powercurve, nan_policy="omit"))  # pyright: ignore TODO: fix
         not_outlier = (z < 4).all(axis=1)
         powercurve = powercurve[not_outlier]
 
@@ -111,13 +103,13 @@ def do_thing(buffer: TimeSeriesBuffer):
             powercurve["rpm"],
             powercurve["power"],
             kind="linear",
-            fill_value="extrapolate",
+            # fill_value="extrapolate",
         )
         f_torque = interp1d(
             powercurve["rpm"],
             powercurve["torque"],
             kind="linear",
-            fill_value="extrapolate",
+            # fill_value="extrapolate",
         )
         new_rpm = np.linspace(powercurve["rpm"].min(), powercurve["rpm"].max(), 100)
         powercurve = pd.DataFrame(

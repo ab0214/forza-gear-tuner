@@ -1,14 +1,13 @@
 import asyncio
-from nicegui import ui
 
-from components.dyno_gear_chart import DynoGearChart
-from components.dyno_chart import DynoChart
 from components.capture import Capture
+from components.dyno_chart import DynoChart
+from components.dyno_gear_chart import DynoGearChart
 from components.gear_chart import GearChart
 from components.gears import Gears
 from components.inspector import Inspector
 from core.time_series_buffer import TimeSeriesBuffer
-
+from nicegui import ui
 
 # Create a shared buffer
 shared_buffer = TimeSeriesBuffer()
@@ -31,4 +30,3 @@ async def main_page():
 
 ui.page("/")(main_page)
 ui.run(fastapi_docs=True, endpoint_documentation="all", dark=True)
-#

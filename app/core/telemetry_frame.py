@@ -1,5 +1,6 @@
 import struct
 from typing import Any
+
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
@@ -12,7 +13,7 @@ class TelemetryFrame(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
-    def unpack_packet(cls, data: Any) -> tuple[Any, ...]:
+    def unpack_packet(cls, data: Any) -> Any:
         if isinstance(data, bytes):
             data_format = "<iIfffffffffffffffffffffffffffffffffffffffffffffffffff\
                 iiiiiiIIfffffffffffffffffHBBBBBBbbb"

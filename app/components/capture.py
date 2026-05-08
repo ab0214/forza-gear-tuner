@@ -1,6 +1,7 @@
+from nicegui import events, ui
+
 from core.time_series_buffer import TimeSeriesBuffer
 from core.udp_listener import UdpListener
-from nicegui import events, ui
 
 
 class Capture:
@@ -28,9 +29,9 @@ class Capture:
         ).props('accept=".jsonl"')
         self.update_frame_count()
 
-    async def load_jsonl(self, e: events.UploadEventArguments):
+    async def load_jsonl(self, upload_event: events.UploadEventArguments):
         try:
-            text = await e.file.text()
+            text = await upload_event.file.text()
             await self.buffer.load_jsonl(text)
         except Exception as e:
             error_msg = f"Error loading JSONL: {e}"

@@ -1,6 +1,7 @@
 import asyncio
 import inspect
 from collections import deque
+from typing import Callable
 
 from core.telemetry_frame import TelemetryFrame
 
@@ -10,14 +11,14 @@ class TimeSeriesBuffer:
 
     # Magic methods
 
-    def __init__(self, maxlen: int = None):
+    def __init__(self, maxlen: int | None = None):
         """
         Initialize the buffer with an optional maximum length.
         If maxlen is specified, the buffer will behave like a circular buffer.
         """
         self.contents = deque(maxlen=maxlen)
         self._lock = asyncio.Lock()
-        self._subscribers = []
+        self._subscribers: list[Callable] = []
 
     def __len__(self):
         """Return the number of items in the buffer."""
@@ -31,11 +32,11 @@ class TimeSeriesBuffer:
 
     # Subscriber management
 
-    def subscribe(self, callback: callable):
+    def subscribe(self, callback: Callable):
         """Register a (sync or async) callback to be called when the buffer changes."""
         self._subscribers.append(callback)
 
-    def unsubscribe(self, callback: callable):
+    def unsubscribe(self, callback: Callable):
         """Unregister a callback."""
         self._subscribers.remove(callback)
 

@@ -1,3 +1,5 @@
+from typing import cast
+
 import plotly
 import plotly.graph_objs as go
 from nicegui import ui
@@ -6,7 +8,7 @@ from utils.gear_ratio import analyze_rpm_to_kmh_ratios, get_engine_max_rpm
 
 
 class GearChart:
-    def __init__(self, buffer=None):
+    def __init__(self, buffer):
         self.buffer = buffer
         self.buffer.subscribe(self.update_chart)
 
@@ -34,12 +36,13 @@ class GearChart:
         max_rpm = get_engine_max_rpm(tfs)
 
         colors = plotly.colors.DEFAULT_PLOTLY_COLORS
-        self.chart.figure.data = ()
-        self.chart.figure.layout.shapes = ()
+        fig: go.Figure = cast(go.Figure, self.chart.figure)
+        fig.data = ()
+        fig.layout.shapes = ()
         for i in range(1, len(ratios)):
             color = colors[i % len(colors)]
             # Add line for each gear
-            self.chart.figure.add_trace(
+            fig.add_trace(
                 go.Scatter(
                     x=[min_rpm * ratios[i], max_rpm * ratios[i]],
                     y=[min_rpm, max_rpm],
@@ -51,7 +54,7 @@ class GearChart:
             # Vertical line
             if i < len(ratios) - 1:
                 speed = max_rpm * ratios[i]
-                self.chart.figure.add_shape(
+                fig.add_shape(
                     type="line",
                     x0=speed,
                     x1=speed,

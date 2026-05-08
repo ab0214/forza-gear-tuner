@@ -1,11 +1,12 @@
 from nicegui import ui
+
 from utils import gear_ratio
 
 
 class Gears:
     # TODO: get reference to telemetry frames from the capture component.
 
-    def __init__(self, buffer=None):
+    def __init__(self, buffer):
         self.buffer = buffer
 
         # Title
@@ -45,7 +46,7 @@ class Gears:
         label.text = f"{ratio:.2f}"
 
     async def analyze_gear_ratio(self):
-        frames = await self.buffer.to_list()
+        frames = list(self.buffer.contents)
         ratios = gear_ratio.analyze_gear_ratios(frames)
 
         # Delete previous gear UI elements
