@@ -1,5 +1,6 @@
 import math
 from typing import List
+
 from core.telemetry_frame import TelemetryFrame
 
 
@@ -74,9 +75,9 @@ def analyze_gear_ratio(tfs: List[TelemetryFrame], gear: int) -> float:
 def analyze_gear_ratios(tfs: List[TelemetryFrame]) -> List[float]:
     """Determine gear ratios for all gears based on telemetry data."""
     max_gear = max((int(tf.gear) for tf in tfs), default=0)  # Find top gear
-    gear_ratios = []
+    gear_ratios = [float("nan")] * (max_gear + 1)  # Initialize all ratios as NaN
     for gear in range(0, max_gear + 1):
-        gear_ratios.append(analyze_gear_ratio(tfs, gear))
+        gear_ratios[gear] = analyze_gear_ratio(tfs, gear)
     return gear_ratios
 
 
@@ -127,9 +128,9 @@ def analyze_rpm_to_kmh_ratio(tfs: List[TelemetryFrame], gear: int) -> float:
 def analyze_rpm_to_kmh_ratios(tfs: List[TelemetryFrame]) -> List[float]:
     """Determine rpm to km/h conversion ratios for all gears based on telemetry data."""
     max_gear = max((int(tf.gear) for tf in tfs), default=0)  # Find top gear
-    rpm_to_kmh_ratios = []
+    rpm_to_kmh_ratios = [float("nan")] * (max_gear + 1)  # Initialize all ratios as NaN
     for gear in range(0, max_gear + 1):
-        rpm_to_kmh_ratios.append(analyze_rpm_to_kmh_ratio(tfs, gear))
+        rpm_to_kmh_ratios[gear] = analyze_rpm_to_kmh_ratio(tfs, gear)
     return rpm_to_kmh_ratios
 
 
