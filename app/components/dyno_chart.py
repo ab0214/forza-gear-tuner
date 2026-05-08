@@ -72,7 +72,7 @@ def do_thing(buffer: TimeSeriesBuffer):
                 "power": frame.power / 1000,
             }
             for frame in buffer.contents
-            if frame.throttle == 255
+            if frame.throttle == 255 and frame.clutch == 0 and frame.speed > 1
         ],
         columns=["rpm", "torque", "power"],
     )
