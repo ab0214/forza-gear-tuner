@@ -1,6 +1,4 @@
 # forza-gear-tuner
-Python script for tuning gear ratios in Forza.
+Telemetry analysis tool for Forza Horizon 5.
 
-Plots power band for each gear at different speeds based on telemetry recordings.
-
-<img width="386" alt="Figure 2025-05-12 193900" src="https://github.com/user-attachments/assets/db141c27-1b1b-47af-8594-09923ae1c84d" />
+<img width="2260" height="884" alt="image" src="https://github.com/user-attachments/assets/aafc849c-689a-4c3d-b84e-6bc050b792d4" />

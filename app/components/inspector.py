@@ -1,0 +1,63 @@
+from nicegui import ui
+
+from core.telemetry_frame import TelemetryFrame
+
+
+class Inspector:
+    def __init__(self, buffer=None):
+        self.buffer = buffer
+
+        self.selected_frame = None
+        self.selected_field = None
+        self.selected_value = None
+
+        ui.label("Inspector")
+
+        with ui.row(align_items="center"):
+            self.playhead = ui.slider(
+                min=0.0,
+                max=1.0,
+                value=1.0,
+                step=0.000001,
+                on_change=self.select_frame,
+            )
+
+            field_names = list(TelemetryFrame.model_fields.keys())
+            self.field_dropdown = ui.select(
+                field_names, value=field_names[0], on_change=self.select_field
+            )
+            self.value_label = ui.label("N/A")
+
+    def update(self):
+        # self.select_frame(self.playhead.value)
+        # self.select_field(self.field_dropdown.value)
+        self.update_value_label()
+
+    def update_value_label(self):
+        if self.selected_frame and self.selected_field:
+            value = getattr(self.selected_frame, self.selected_field, "N/A")
+            if isinstance(value, float):
+                self.value_label.text = f"{value:.2f}"
+            else:
+                self.value_label.text = str(value)
+        else:
+            self.value_label.text = "N/A"
+
+    def select_frame(self, e):
+        if not self.buffer or len(self.buffer) == 0:
+            self.selected_frame = None
+            self.update_value_label()
+            return
+
+        position = e.value
+        if position == 1.0:
+            index = -1
+        else:
+            index = int((len(self.buffer) - 0.5) * position)
+        self.selected_frame = self.buffer.contents[index]
+        self.update_value_label()
+
+    def select_field(self, e):
+        field_name = e.value
+        self.selected_field = field_name
+        self.update_value_label()
