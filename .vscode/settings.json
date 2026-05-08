@@ -7,5 +7,6 @@
       "source.organizeImports.ruff": "explicit"
     }
   },
+  "python.analysis.extraPaths": ["${workspaceFolder}/app"],
   "python.analysis.typeCheckingMode": "standard"
 }
