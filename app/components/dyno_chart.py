@@ -38,7 +38,11 @@ class DynoChart:
             ),
             yaxis=dict(title="Power (kW)", rangemode="tozero"),
             yaxis2=dict(
-                title="Torque (Nm)", rangemode="tozero", overlaying="y", side="right"
+                title="Torque (Nm)",
+                rangemode="tozero",
+                overlaying="y",
+                side="right",
+                tickmode="sync",
             ),
             template="plotly_dark",
             legend=dict(

@@ -1,4 +1,5 @@
 from nicegui import ui
+
 from core.telemetry_frame import TelemetryFrame
 
 
@@ -12,8 +13,7 @@ class Inspector:
 
         ui.label("Inspector")
 
-        self.playhead_container = ui.grid(columns="200px")
-        with self.playhead_container:
+        with ui.row(align_items="center"):
             self.playhead = ui.slider(
                 min=0.0,
                 max=1.0,
@@ -22,12 +22,11 @@ class Inspector:
                 on_change=self.select_frame,
             )
 
-        field_names = list(TelemetryFrame.model_fields.keys())
-        self.field_dropdown = ui.select(
-            field_names, value=field_names[0], on_change=self.select_field
-        )
-        self.value_label = ui.label("N/A")
-        ui.button("Refresh", on_click=self.update)
+            field_names = list(TelemetryFrame.model_fields.keys())
+            self.field_dropdown = ui.select(
+                field_names, value=field_names[0], on_change=self.select_field
+            )
+            self.value_label = ui.label("N/A")
 
     def update(self):
         # self.select_frame(self.playhead.value)
@@ -36,9 +35,11 @@ class Inspector:
 
     def update_value_label(self):
         if self.selected_frame and self.selected_field:
-            self.value_label.text = str(
-                getattr(self.selected_frame, self.selected_field, "N/A")
-            )
+            value = getattr(self.selected_frame, self.selected_field, "N/A")
+            if isinstance(value, float):
+                self.value_label.text = f"{value:.2f}"
+            else:
+                self.value_label.text = str(value)
         else:
             self.value_label.text = "N/A"
 

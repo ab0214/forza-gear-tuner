@@ -8,12 +8,10 @@ class Gears:
 
     def __init__(self, buffer):
         self.buffer = buffer
+        self.buffer.subscribe(self.analyze_gear_ratio)
 
         # Title
         ui.label("Gears")
-
-        # Button to analyze gear ratio
-        ui.button("Analyze", on_click=self.analyze_gear_ratio)
 
         # Grid layout for gear ratio sliders
         with ui.grid(columns="auto 200px auto") as self.grid:

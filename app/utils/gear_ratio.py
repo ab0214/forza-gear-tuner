@@ -137,4 +137,10 @@ def analyze_rpm_to_kmh_ratios(tfs: List[TelemetryFrame]) -> List[float]:
 def get_engine_max_rpm(tfs: List[TelemetryFrame]) -> float:
     """Get the maximum engine RPM observed in the telemetry data."""
     max_rpm = max((tf.engine_max_rpm for tf in tfs), default=0)
-    return max_rpm if max_rpm > 0 else float("nan")
+    return max_rpm
+
+
+def get_engine_idle_rpm(tfs: List[TelemetryFrame]) -> float:
+    """Get the engine idle RPM observed in the telemetry data."""
+    idle_rpm = min((tf.idle_rpm for tf in tfs), default=0)
+    return idle_rpm

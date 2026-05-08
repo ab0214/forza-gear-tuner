@@ -12,21 +12,24 @@ class Capture:
         self.transport = None
         self.buffer.subscribe(self.update_frame_count)
 
-        ui.label("Capture / Save / Load")
-        self.frame_count_label = ui.label("Frames: 0")
-        with ui.button_group():
-            toggle_button = ui.button(
-                "Start", on_click=lambda: self.toggle_capture(toggle_button)
-            )
-            ui.button("Reset", on_click=self.reset_buffer)
-            ui.button("Save", on_click=self.download)
-        # JSONL upload
-        ui.upload(
-            label="Import JSONL file",
-            on_upload=self.load_jsonl,
-            max_files=1,
-            auto_upload=True,
-        ).props('accept=".jsonl"')
+        with ui.row():
+            with ui.column():
+                ui.label("Capture / Save / Load")
+                self.frame_count_label = ui.label("Frames: 0")
+                with ui.button_group():
+                    toggle_button = ui.button(
+                        "Start", on_click=lambda: self.toggle_capture(toggle_button)
+                    )
+                    ui.button("Reset", on_click=self.reset_buffer)
+                    ui.button("Save", on_click=self.download)
+            # JSONL upload
+            ui.upload(
+                label="Import JSONL file",
+                on_upload=self.load_jsonl,
+                max_files=1,
+                auto_upload=True,
+                multiple=False,
+            ).props('accept=".jsonl"')
 
     async def load_jsonl(self, upload_event: events.UploadEventArguments):
         try:
@@ -72,7 +75,7 @@ class TelemetryProtocol(asyncio.DatagramProtocol):
     def datagram_received(self, data, addr):
         try:
             tf = TelemetryFrame.model_validate(data)
-            if self.require_race_on and tf.is_race_on == 0:
+            if self.require_race_on and not tf.is_race_on:
                 return
             asyncio.create_task(self.buffer.add(tf))
         except Exception as e:
